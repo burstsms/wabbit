@@ -35,6 +35,10 @@ func TestConvertOptDefaults(t *testing.T) {
 		t.Errorf("Invalid default message ID: %s\n", opt.MessageId)
 	}
 
+	if opt.Expiration != "" {
+		t.Errorf("Invalid default expiration: %s\n", opt.Expiration)
+	}
+
 	if len(opt.Headers) != 0 {
 		t.Errorf("Invalid value for headers: %v", opt.Headers)
 	}
