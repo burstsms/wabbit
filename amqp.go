@@ -66,6 +66,7 @@ type (
 		MessageId() string
 		ContentType() string
 		Timestamp() time.Time
+		Redelivered() bool
 	}
 
 	// Confirmation is an interface to confrimation messages
