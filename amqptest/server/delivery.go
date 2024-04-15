@@ -17,6 +17,7 @@ type (
 		messageId     string
 		channel       *Channel
 		contentType   string
+		delivered     bool
 	}
 )
 
@@ -28,6 +29,7 @@ func NewDelivery(ch *Channel, data []byte, tag uint64, messageId string, hdrs wa
 		tag:         tag,
 		messageId:   messageId,
 		contentType: contentType,
+		delivered:   false,
 	}
 }
 
@@ -69,4 +71,8 @@ func (d *Delivery) Timestamp() time.Time {
 
 func (d *Delivery) ContentType() string {
 	return d.contentType
+}
+
+func (d *Delivery) Redelivered() bool {
+	return d.delivered
 }
