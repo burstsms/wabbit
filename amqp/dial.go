@@ -1,11 +1,12 @@
 package amqp
 
 import (
+	"crypto/tls"
 	"time"
 
 	"github.com/NeowayLabs/wabbit"
 	"github.com/NeowayLabs/wabbit/utils"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // Conn is the amqp connection
@@ -17,25 +18,10 @@ type Conn struct {
 	attempts uint8
 }
 
-// Dial to AMQP broker
-func Dial(uri string) (*Conn, error) {
-	conn := &Conn{}
-
-	// closure the uri for handle reconnects
-	conn.dialFn = func() error {
-		var err error
-
-		conn.Connection, err = amqp.Dial(uri)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
+func doDial(conn *Conn, dialFn func() error) (*Conn, error) {
+	conn.dialFn = dialFn
 
 	err := conn.dialFn()
-
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +29,50 @@ func Dial(uri string) (*Conn, error) {
 	return conn, nil
 }
 
+// Dial connects to an AMQP broker, with defaults
+func Dial(uri string) (*Conn, error) {
+	conn := &Conn{}
+
+	return doDial(conn, func() error {
+		var err error
+		conn.Connection, err = amqp.Dial(uri)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+// DialTLS connects to an AMQP broker, with TLS config
+func DialTLS(uri string, tlsconfig *tls.Config) (*Conn, error) {
+	conn := &Conn{}
+
+	return doDial(conn, func() error {
+		var err error
+		conn.Connection, err = amqp.DialTLS(uri, tlsconfig)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+// DialConfig connects to an AMQP broker, with custom config
+func DialConfig(uri string, config amqp.Config) (*Conn, error) {
+	conn := &Conn{}
+
+	return doDial(conn, func() error {
+		var err error
+		conn.Connection, err = amqp.DialConfig(uri, config)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 // NotifyClose registers a listener for close events.
-// For more information see: https://godoc.org/github.com/streadway/amqp#Connection.NotifyClose
+// For more information see: https://godoc.org/github.com/rabbitmq/amqp091-go#Connection.NotifyClose
 func (conn *Conn) NotifyClose(c chan wabbit.Error) chan wabbit.Error {
 	amqpErr := conn.Connection.NotifyClose(make(chan *amqp.Error, cap(c)))
 

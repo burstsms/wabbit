@@ -1,8 +1,10 @@
+//go:build integration
 // +build integration
 
 package amqp
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"os"
@@ -10,7 +12,8 @@ import (
 	"time"
 
 	"github.com/NeowayLabs/wabbit"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/tiago4orion/conjure"
 )
 
@@ -105,11 +108,9 @@ dial:
 	return nil
 }
 
-// TestDial test a simple connection to rabbitmq.
-// If the rabbitmq disconnects will not be tested here!
-func TestDial(t *testing.T) {
+func testDialGeneric(t *testing.T, dialFunc func() error) {
 	// Should fail
-	_, err := Dial("amqp://guest:guest@localhost:35672/%2f")
+	err := dialFunc()
 
 	if err == nil {
 		t.Error("No backend started... Should fail")
@@ -128,7 +129,7 @@ func TestDial(t *testing.T) {
 		return
 	}
 
-	_, err = Dial("amqp://guest:guest@localhost:35672/%2f")
+	err = dialFunc()
 
 	if err != nil {
 		t.Error(err)
@@ -136,6 +137,35 @@ func TestDial(t *testing.T) {
 	}
 
 	dockerClient.Remove(rabbitmqCtnName1)
+}
+
+// TestDial test a simple connection to rabbitmq.
+// If the rabbitmq disconnects will not be tested here!
+func TestDial(t *testing.T) {
+	testDialGeneric(t, func() error {
+		_, err := Dial("amqp://guest:guest@localhost:35672/%2f")
+		return err
+	})
+}
+
+// TestDialTLS test a simple connection to rabbitmq, with TLS.
+func TestDialTLS(t *testing.T) {
+	testDialGeneric(t, func() error {
+		_, err := DialTLS("amqp://guest:guest@localhost:35672/%2f", &tls.Config{})
+		return err
+	})
+}
+
+// TestDialConfig test a simple connection to rabbitmq, with custom config.
+func TestDialConfig(t *testing.T) {
+	testDialGeneric(t, func() error {
+		_, err := DialConfig("amqp://guest:guest@localhost:35672/%2f", amqp.Config{
+			Properties: amqp.Table{
+				"foo": "bar",
+			},
+		})
+		return err
+	})
 }
 
 func TestAutoRedial(t *testing.T) {
