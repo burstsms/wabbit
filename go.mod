@@ -1,6 +1,6 @@
 module github.com/NeowayLabs/wabbit
 
-go 1.21.6
+go 1.21
 
 require (
 	github.com/fsouza/go-dockerclient v1.11.0
