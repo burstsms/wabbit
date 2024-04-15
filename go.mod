@@ -1,9 +1,8 @@
-module github.com/NeowayLavs/wabbit
+module github.com/NeowayLabs/wabbit
 
 go 1.21.6
 
 require (
-	github.com/NeowayLabs/wabbit v0.0.0-20210927194032-73ad61d1620e
 	github.com/fsouza/go-dockerclient v1.11.0
 	github.com/pborman/uuid v1.2.1
 	github.com/rabbitmq/amqp091-go v1.9.0
